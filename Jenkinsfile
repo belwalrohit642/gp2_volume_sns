@@ -32,6 +32,7 @@ stage('Check EC2 Tags') {
                     def jiraTag = tags.find { it.Key == 'jira' }
 
                     if (environmentTag && jiraTag) {
+                        echo "yes have it"
                         instancesWithTags.add(instance.InstanceId)
                     }
                 }
