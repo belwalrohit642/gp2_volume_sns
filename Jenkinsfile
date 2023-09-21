@@ -22,8 +22,9 @@ node {
             instances.each { instance ->
                 def tags = instance.Tags
                 if (tags) {
-                    def environmentTag = tags.find { it.Key == 'environment' }
-                    def jiraTag = tags.find { it.Key == 'jira' }
+                    def environmentTag = tags?.find { it.Key == 'environment' }
+                    def jiraTag = tags?.find { it.Key == 'jira' }
+
 
                     if (environmentTag && jiraTag) {
                         instancesWithTags.add(instance.InstanceId)
