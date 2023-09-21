@@ -8,7 +8,7 @@ node {
             if (ebs_volumes.contains("\"VolumeType\": \"gp2\"")) {
                 echo "There are gp2 EBS volumes in your AWS account."
 
-                 sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'GP2 EBS Volumes Found' --message 'There are gp2 EBS volumes in your AWS account.'"
+                // sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'GP2 EBS Volumes Found' --message 'There are gp2 EBS volumes in your AWS account.'"
             } else {
                 echo "No gp2 EBS volumes found in your AWS account."
             }
@@ -49,7 +49,7 @@ node {
                 
                 if (instancesWithTags) {
                     echo "EC2 instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
-                    sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 instance found with both tags' --message 'There are EC2 instance with both tags  in your AWS account.'"
+                  //  sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 instance found with both tags' --message 'There are EC2 instance with both tags  in your AWS account.'"
                 } else {
                     echo "No EC2 instances found with both 'environment' and 'jira' tags."
                 }
@@ -57,8 +57,42 @@ node {
         } catch (Exception e) {
             error "Error checking EC2 instances: ${e.message}"
         }
+
     }
-}
+    stage('Check EBS Volumes') {
+        try {
+            def volumes = sh(
+                script: """
+                    aws ec2 describe-volumes --query 'Volumes[?State==\`available\`]' --region ${awsRegion} --output json
+                """,
+                returnStatus: true,
+                returnStdout: true
+            )
+
+            if (volumes == 0) {
+                echo "No unattached EBS volumes found."
+            } else {
+                def unattachedVolumes = sh(
+                    script: """
+                        aws ec2 describe-volumes --query 'Volumes[?State==\`available\`]' --region ${awsRegion} --output json
+                    """,
+                    returnStdout: true
+                ).trim()
+
+                echo "Unattached EBS Volumes:"
+                echo unattachedVolumes
+
+                currentBuild.result = 'FAILURE'
+                error "Found unattached EBS volumes"
+            }
+        } catch (Exception e) {
+            currentBuild.result = 'FAILURE'
+            error "An error occurred: ${e.getMessage()}"
+        }
+    }
+
+    }
+
 
 
 
