@@ -17,14 +17,12 @@ node {
         currentBuild.result = 'FAILURE'
         error("Check EBS Volumes stage failed: ${e.message}")
     }
-
-node {
     try {
         stage('Check EC2 Instances') {
             def awsRegion = 'us-east-1' 
             def environmentTag = 'environment'
             def jiraTag = 'jira'
-            def snsTopicArn = 'arn:aws:sns:us-east-1:640284417783:gp2_volume'
+            def snsTopicArn =  'arn:aws:sns:us-east-1:640284417783:gp2_volume'
 
             def describeInstancesCmd = """
                 aws ec2 describe-instances \
@@ -34,7 +32,7 @@ node {
                 --output text
             """
 
-            def instances = bat(script: describeInstancesCmd, returnStatus: true).trim()
+            def instances = sh(script: describeInstancesCmd, returnStatus: true).trim()
 
             if (instances) {
                 echo "Found EC2 instances with both 'environment' and 'jira' tags."
@@ -46,9 +44,25 @@ node {
                     --message "EC2 instances with both 'environment' and 'jira' tags were found."
                 """
 
-                bat(script: publishSnsCmd)
+                sh(script: publishSnsCmd)
             } else {
                 echo "No EC2 instances found with both 'environment' and 'jira' tags."
+            }
+        }
+
+        stage('Check EBS Volumes') {
+            def describeVolumesCmd = """
+                aws ec2 describe-volumes \
+                --region $awsRegion \
+                --query "Volumes"
+            """
+
+            def volumes = sh(script: describeVolumesCmd, returnStatus: true).trim()
+
+            if (volumes) {
+                echo "There are EBS volumes in your AWS account."
+            } else {
+                echo "No EBS volumes found in your AWS account."
             }
         }
     } catch (Exception e) {
@@ -56,6 +70,8 @@ node {
         currentBuild.result = 'FAILURE'
         error("Pipeline failed")
     }
+}
+
 }
 
 }
