@@ -60,36 +60,17 @@ node {
 
     }
     
-    
     stage('Check EBS Volumes') {
-        try {
-            def volumes = sh(
-                script: """
-                    aws ec2 describe-volumes --query 'Volumes[?State==`available`]' --region ${awsRegion} --output json
-                """,
-                returnStatus: true,
-                returnStdout: true
-            )
+        def awsCliCmd = """aws ec2 describe-volumes --filters Name=status,Values=available --query "Volumes[*].{ID:VolumeId}" --output text"""
+        def availableVolumeIds = sh(script: "${awsCliCmd}", returnStatus: true).trim()
 
-            if (volumes == 0) {
-                echo "No unattached EBS volumes found."
-            } else {
-                def unattachedVolumes = sh(
-                    script: """
-                        aws ec2 describe-volumes --query 'Volumes[?State=='available`]' --region ${awsRegion} --output json
-                    """,
-                    returnStdout: true
-                ).trim()
-
-                echo "Unattached EBS Volumes:"
-                echo unattachedVolumes
-
-                currentBuild.result = 'FAILURE'
-                error "Found unattached EBS volumes"
+        if (availableVolumeIds == 0) {
+            echo "No available EBS volumes found."
+        } else {
+            echo "Available EBS Volumes:"
+            for (volumeId in availableVolumeIds.split('\n')) {
+                echo "Volume ID: ${volumeId}"
             }
-        } catch (Exception e) {
-            currentBuild.result = 'FAILURE'
-            error "An error occurred: ${e.getMessage()}"
         }
     }
 }
