@@ -31,7 +31,7 @@ node {
                 }
             }
 
-            if (instancesWithTags) {
+            if (!instancesWithTags.isEmpty()) {
                 echo "Instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
                 sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 Instances with Tags Found' --message 'Instances with both ''environment'' and ''jira'' tags found: ${instancesWithTags.join(', ')}'"
             } else {
