@@ -49,7 +49,7 @@ node {
                 
                 if (instancesWithTags) {
                     echo "EC2 instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
-                    //sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 instance found with both tags' --message 'There are EC2 instance with both tags  in your AWS account.'"
+                    sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 instance found with both tags' --message 'There are EC2 instance with both tags  in your AWS account.'"
                 } else {
                     echo "No EC2 instances found with both 'environment' and 'jira' tags."
                 }
