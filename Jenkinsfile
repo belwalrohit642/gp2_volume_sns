@@ -49,7 +49,5 @@ stage('Check EC2 Tags') {
         currentBuild.result = 'FAILURE'
         throw e
     }
-}
-
 
 }
