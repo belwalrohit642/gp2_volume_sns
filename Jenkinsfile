@@ -73,6 +73,7 @@ node {
             volumeIdList.each { volumeId ->
                 echo "Volume ID: ${volumeId}"
             }
+          sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EBS Volume is available' --message 'EBS  volume is available'"
         }
     }
 }
