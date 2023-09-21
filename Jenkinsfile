@@ -25,9 +25,9 @@ stage('Check EC2 Tags') {
             def ec2_instances = sh(script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*]"', returnStdout: true).trim()
             def instances = readJSON text: ec2_instances
 
-            instances.each { instance ->
+                 instances.each { instance ->
                 def tags = instance.Tags
-                if (tags) 
+                if (tags) {
                     echo "Checking"
                     def environmentTag = tags.find { it.Key == 'environment' }
                     def jiraTag = tags.find { it.Key == 'jira' }
@@ -37,6 +37,7 @@ stage('Check EC2 Tags') {
                     }
                 }
             }
+
 
             if (instancesWithTags) {
                 echo "Instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
