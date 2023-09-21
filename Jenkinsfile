@@ -44,10 +44,9 @@ stage('Check EC2 Tags') {
             } else {
                 echo "No instances with both 'environment' and 'jira' tags found."
             }
-        }
-    } catch (Exception e) {
+        }catch (Exception e) {
         currentBuild.result = 'FAILURE'
         throw e
     }
-
+}
 }
