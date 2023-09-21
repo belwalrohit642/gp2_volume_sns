@@ -8,7 +8,7 @@ node {
             if (ebs_volumes.contains("\"VolumeType\": \"gp2\"")) {
                 echo "There are gp2 EBS volumes in your AWS account."
 
-              #sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'GP2 EBS Volumes Found' --message 'There are gp2 EBS volumes in your AWS account.'"
+              //sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'GP2 EBS Volumes Found' --message 'There are gp2 EBS volumes in your AWS account.'"
             } else {
                 echo "No gp2 EBS volumes found in your AWS account."
             }
