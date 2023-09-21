@@ -26,7 +26,7 @@ node {
                     def jiraTag = tags.find { it.Key == 'jira' }
 
                     if (environmentTag && jiraTag) {
-                        instancesWithTags.add(instance.InstanceId
+                        instancesWithTags.add(instance.InstanceId)
                     }
                 }
             }
