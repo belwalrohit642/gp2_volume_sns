@@ -13,7 +13,12 @@ node {
                 echo "No gp2 EBS volumes found in your AWS account."
             }
         }
+    } catch (Exception e) {
+        currentBuild.result = 'FAILURE'
+        error("Check EBS Volumes stage failed: ${e.message}")
+    }
 
+    try {
         stage('Check EC2 Tags') {
             def instancesWithTags = []
             def ec2_instances = sh(script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*]"', returnStdout: true).trim()
@@ -22,7 +27,6 @@ node {
             instances.each { instance ->
                 def tags = instance.Tags
                 if (tags != null) {
-                    echo "checking"
                     def environmentTag = tags.find { it.Key == 'environment' }
                     def jiraTag = tags.find { it.Key == 'jira' }
 
@@ -41,6 +45,6 @@ node {
         }
     } catch (Exception e) {
         currentBuild.result = 'FAILURE'
-        error("Pipeline failed: ${e.message}")
+        error("Check EC2 Tags stage failed: ${e.message}")
     }
 }
