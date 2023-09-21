@@ -6,13 +6,8 @@ node {
 
 
         try {
-            withCredentials([string(credentialsId: 'your-aws-access-key-id', variable: 'AWS_ACCESS_KEY_ID'), string(credentialsId: 'your-aws-secret-access-key', variable: 'AWS_SECRET_ACCESS_KEY')]) {
-                sh "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"
-                sh "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-                sh "aws configure set default.region $AWS_DEFAULT_REGION"
-
                 def ebs_volumes = sh(script: 'aws ec2 describe-volumes --query \'Volumes\'', returnStdout: true).trim()
-
+                   
                 if (ebs_volumes.contains("\"VolumeType\": \"gp2\"")) {
                     echo "There are gp2 EBS volumes in your AWS account."
 
