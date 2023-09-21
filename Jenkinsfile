@@ -23,7 +23,7 @@ node {
                 def environmentTag = 'environment'
                 def jiraTag = 'jira'
                 
-            def ec2InstancesJson = sh(
+            def ec2Instances = sh(
     script: 'aws ec2 describe-instances --filters "Name=instance-state-name,Values=running,pending" --query "Reservations[].Instances[].{InstanceId:InstanceId, Tags:Tags}" --output json',
     returnStdout: true
 ).trim()
