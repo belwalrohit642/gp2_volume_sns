@@ -1,5 +1,4 @@
 node {
-    def AWS_DEFAULT_REGION = 'us-east-1'
     def SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:640284417783:gp2_volume'
 
     stage('Check EBS Volumes') {
