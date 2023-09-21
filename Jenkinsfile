@@ -18,33 +18,44 @@ node {
         error("Check EBS Volumes stage failed: ${e.message}")
     }
 
+node {
     try {
-        stage('Check EC2 Tags') {
-            def instancesWithTags = []
-            def ec2_instances = sh(script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*]"', returnStdout: true).trim()
-            def instances = readJSON text: ec2_instances
+        stage('Check EC2 Instances') {
+            def awsRegion = 'us-east-1' 
+            def environmentTag = 'environment'
+            def jiraTag = 'jira'
+            def snsTopicArn = 'arn:aws:sns:us-east-1:640284417783:gp2_volume'
 
-            instances.each { instance ->
-                def tags = instance.Tags
-                if (tags != null) {
-                    def environmentTag = tags.find { it.Key == 'environment' }
-                    def jiraTag = tags.find { it.Key == 'jira' }
+            def describeInstancesCmd = """
+                aws ec2 describe-instances \
+                --region $awsRegion \
+                --filters "Name=tag:environment,Values=$environmentTag" "Name=tag:jira,Values=$jiraTag" \
+                --query "Reservations[].Instances[].InstanceId" \
+                --output text
+            """
 
-                    if (environmentTag && jiraTag) {
-                        instancesWithTags.add(instance.InstanceId)
-                    }
-                } 
-            }
+            def instances = bat(script: describeInstancesCmd, returnStatus: true).trim()
 
-            if (!instancesWithTags.isEmpty()) {
-                echo "Instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
-                sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 Instances with Tags Found' --message 'Instances with both ''environment'' and ''jira'' tags found: ${instancesWithTags.join(', ')}'"
+            if (instances) {
+                echo "Found EC2 instances with both 'environment' and 'jira' tags."
+
+                def publishSnsCmd = """
+                    aws sns publish \
+                    --region $awsRegion \
+                    --topic-arn $snsTopicArn \
+                    --message "EC2 instances with both 'environment' and 'jira' tags were found."
+                """
+
+                bat(script: publishSnsCmd)
             } else {
-                echo "No instances with both 'environment' and 'jira' tags found."
+                echo "No EC2 instances found with both 'environment' and 'jira' tags."
             }
         }
     } catch (Exception e) {
+        echo "Error: ${e.message}"
         currentBuild.result = 'FAILURE'
-        error("Check EC2 Tags stage failed: ${e.message}")
+        error("Pipeline failed")
     }
+}
+
 }
