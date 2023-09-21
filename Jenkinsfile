@@ -1,6 +1,6 @@
 node {
     def SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:640284417783:gp2_volume'
-
+  def awsRegion = 'us-east-1'
     try {
         stage('Check EBS Volumes') {
             def ebs_volumes = sh(script: 'aws ec2 describe-volumes --query \'Volumes\'', returnStdout: true).trim()
@@ -59,12 +59,13 @@ node {
         }
 
     }
+    
+    
     stage('Check EBS Volumes') {
-        def awsRegion='us-east-1'
         try {
             def volumes = sh(
                 script: """
-                    aws ec2 describe-volumes --query 'Volumes[?State==\\`available\\`]' --region ${awsRegion} --output json
+                    aws ec2 describe-volumes --query 'Volumes[?State==\`available\`]' --region ${awsRegion} --output json
                 """,
                 returnStatus: true,
                 returnStdout: true
@@ -75,7 +76,7 @@ node {
             } else {
                 def unattachedVolumes = sh(
                     script: """
-                        aws ec2 describe-volumes --query 'Volumes[?State==\\`available\\`]' --region ${awsRegion} --output json
+                        aws ec2 describe-volumes --query 'Volumes[?State==\`available\`]' --region ${awsRegion} --output json
                     """,
                     returnStdout: true
                 ).trim()
@@ -90,6 +91,9 @@ node {
             currentBuild.result = 'FAILURE'
             error "An error occurred: ${e.getMessage()}"
         }
+    }
+}
+
     }
 
     }
