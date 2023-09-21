@@ -32,7 +32,7 @@ node {
                 --output text
             """
 
-            def instances = sh(script: describeInstancesCmd, returnStatus: true).trim()
+               def instances = sh(script: describeInstancesCmd, returnStatus: true, returnStdout: true).trim()
 
             if (instances) {
                 echo "Found EC2 instances with both 'environment' and 'jira' tags."
