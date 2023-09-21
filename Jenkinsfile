@@ -19,11 +19,12 @@ node {
     }
    
 stage('Check EC2 Tags') {
+    def instancesWithTags = []
     try {
         def ec2_instances = sh(script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*]"', returnStdout: true).trim()
         def instances = jsonParse(text: ec2_instances)
         
-        def instancesWithTags = []
+        
         
         instances.each { instance ->
             def tags = instance.Tags
