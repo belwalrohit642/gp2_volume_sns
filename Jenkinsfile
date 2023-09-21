@@ -17,4 +17,41 @@ node {
             throw e
         }
     }
+   
+    
+    stage('Check EC2 Tags') {
+        try {
+            def ec2_instances = sh(script: 'aws ec2 describe-instances --query "Reservations[*].Instances[*]"', returnStdout: true).trim()
+       
+            def instances = readJSON(text: ec2_instances)
+            
+            def instancesWithTags = []
+            
+            instances.each { instance ->
+                def tags = instance.Tags
+                if (tags) {
+                    def environmentTag = tags.find { it.Key == 'environment' }
+                    def jiraTag = tags.find { it.Key == 'jira' }
+                    
+                    if (environmentTag && jiraTag) {
+                        instancesWithTags.add(instance.InstanceId)
+                    }
+                }
+            }
+            
+            if (instancesWithTags) {
+                echo "Instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
+                
+                sh "aws sns publish --topic-arn $SNS_TOPIC_ARN --subject 'EC2 Instances with Tags Found' --message 'Instances with both ''environment'' and ''jira'' tags found: ${instancesWithTags.join(', ')}'"
+            } else {
+                echo "No instances with both 'environment' and 'jira' tags found."
+            }
+        } catch (Exception e) {
+            currentBuild.result = 'FAILURE'
+            throw e
+        }
+    
+ 
+}
+
 }
