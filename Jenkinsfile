@@ -60,15 +60,17 @@ node {
 
     }
     
+
     stage('Check EBS Volumes') {
         def awsCliCmd = """aws ec2 describe-volumes --filters Name=status,Values=available --query "Volumes[*].{ID:VolumeId}" --output text"""
-        def availableVolumeIds = sh(script: "${awsCliCmd}", returnStatus: true).trim()
+        def availableVolumeIds = sh(script: "${awsCliCmd}", returnStdout: true).trim()
 
-        if (availableVolumeIds == 0) {
+        if (availableVolumeIds.isEmpty()) {
             echo "No available EBS volumes found."
         } else {
             echo "Available EBS Volumes:"
-            for (volumeId in availableVolumeIds.split('\n')) {
+            def volumeIdList = availableVolumeIds.split('\n')
+            volumeIdList.each { volumeId ->
                 echo "Volume ID: ${volumeId}"
             }
         }
