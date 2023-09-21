@@ -22,6 +22,7 @@ node {
             instances.each { instance ->
                 def tags = instance.Tags
                 if (tags != null) {
+                    echo "checking"
                     def environmentTag = tags.find { it.Key == 'environment' }
                     def jiraTag = tags.find { it.Key == 'jira' }
 
