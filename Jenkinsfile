@@ -17,44 +17,48 @@ node {
         currentBuild.result = 'FAILURE'
         error("Check EBS Volumes stage failed: ${e.message}")
     }
-    try {
-        stage('Check EC2 Instances') {
-            def awsRegion = 'us-east-1' 
-            def environmentTag = 'environment'
-            def jiraTag = 'jira'
-            def snsTopicArn = 'arn:aws:sns:us-east-1:640284417783:gp2_volume'
-
-            def describeInstancesCmd = """
-                aws ec2 describe-instances \
-                --region $awsRegion \
-                --filters Name=tag:environment,Values=$environmentTag Name=tag:jira,Values=$jiraTag \
-                --query Reservations[].Instances[].InstanceId \
-                --output text
-            """
-
-            def instances = sh(script: describeInstancesCmd, returnStatus: true).trim()
-
-            if (instances.isEmpty()) {
-                echo "No EC2 instances found with both 'environment' and 'jira' tags."
-            } else {
-                echo "Found EC2 instances with both 'environment' and 'jira' tags:"
-                echo instances
-
-                def publishSnsCmd = """
-                    aws sns publish \
-                    --region $awsRegion \
-                    --topic-arn $snsTopicArn \
-                    --message "EC2 instances with both 'environment' and 'jira' tags were found."
-                """
-
-                sh(script: publishSnsCmd)
-            }
+    stage('Check EC2 Instances') {
+        try {
+                
+                def environmentTag = 'environment'
+                def jiraTag = 'jira'
+                
+                def ec2Instances = sh(script: "aws ec2 describe-instances --query 'Reservations[].Instances[].{InstanceId:InstanceId, Tags:Tags}' --output json", returnStdout: true).trim()
+                def ec2InstancesJson = readJSON(text: ec2Instances)
+                
+                def instancesWithTags = []
+                
+                ec2InstancesJson.each { instance ->
+                    def tags = instance.Tags
+                    def hasEnvironmentTag = false
+                    def hasJiraTag = false
+                    
+                    tags.each { tag ->
+                        if (tag.Key == environmentTag) {
+                            hasEnvironmentTag = true
+                        }
+                        if (tag.Key == jiraTag) {
+                            hasJiraTag = true
+                        }
+                    }
+                    
+                    if (hasEnvironmentTag && hasJiraTag) {
+                        instancesWithTags.add(instance.InstanceId)
+                    }
+                }
+                
+                if (instancesWithTags) {
+                    echo "EC2 instances with both 'environment' and 'jira' tags found: ${instancesWithTags.join(', ')}"
+                } else {
+                    echo "No EC2 instances found with both 'environment' and 'jira' tags."
+                }
+            
+        } catch (Exception e) {
+            error "Error checking EC2 instances: ${e.message}"
         }
-    } catch (Exception e) {
-        echo "Error: ${e.message}"
-        currentBuild.result = 'FAILURE'
-        error("Pipeline failed")
     }
+}
+
 
 
 }
