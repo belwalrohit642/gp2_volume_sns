@@ -33,7 +33,7 @@ node {
                     if (environmentTag && jiraTag) {
                         instancesWithTags.add(instance.InstanceId)
                     }
-                }
+                } 
             }
 
             if (!instancesWithTags.isEmpty()) {
