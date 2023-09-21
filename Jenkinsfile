@@ -70,8 +70,5 @@ node {
         currentBuild.result = 'FAILURE'
         error("Pipeline failed")
     }
-}
-
-}
 
 }
