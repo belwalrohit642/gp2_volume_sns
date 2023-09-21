@@ -60,6 +60,7 @@ node {
 
     }
     stage('Check EBS Volumes') {
+        def awsRegion='us-east-1'
         try {
             def volumes = sh(
                 script: """
@@ -74,7 +75,7 @@ node {
             } else {
                 def unattachedVolumes = sh(
                     script: """
-                        aws ec2 describe-volumes --query 'Volumes[?State==\`available\`]' --region ${awsRegion} --output json
+                        aws ec2 describe-volumes --query 'Volumes[?State==\\`available\\`]' --region ${awsRegion} --output json
                     """,
                     returnStdout: true
                 ).trim()
